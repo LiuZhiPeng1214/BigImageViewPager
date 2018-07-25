@@ -3,7 +3,7 @@ package cc.shinichi.library.glide.cache;
 import com.bumptech.glide.load.Key;
 import com.bumptech.glide.util.LruCache;
 import com.bumptech.glide.util.Util;
-import java.io.UnsupportedEncodingException;
+
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
@@ -29,7 +29,7 @@ public class SafeKeyGenerator {
 				safeKey = Util.sha256BytesToHex(messageDigest.digest());
 			} catch (NoSuchAlgorithmException e) {
 				e.printStackTrace();
-			} catch (UnsupportedEncodingException e) {
+			} catch (Exception e) {
 				e.printStackTrace();
 			}
 			synchronized (loadIdToSafeHash) {

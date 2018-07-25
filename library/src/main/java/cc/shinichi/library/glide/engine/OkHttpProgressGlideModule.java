@@ -3,20 +3,26 @@ package cc.shinichi.library.glide.engine;
 import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
+import android.support.annotation.NonNull;
+
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.GlideBuilder;
+import com.bumptech.glide.Registry;
+import com.bumptech.glide.annotation.GlideModule;
 import com.bumptech.glide.integration.okhttp3.OkHttpUrlLoader;
 import com.bumptech.glide.load.DecodeFormat;
 import com.bumptech.glide.load.engine.cache.DiskCache;
 import com.bumptech.glide.load.engine.cache.DiskLruCacheWrapper;
 import com.bumptech.glide.load.model.GlideUrl;
-import com.bumptech.glide.module.GlideModule;
+import com.bumptech.glide.module.AppGlideModule;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+
 import okhttp3.HttpUrl;
 import okhttp3.Interceptor;
 import okhttp3.MediaType;
@@ -29,8 +35,8 @@ import okio.BufferedSource;
 import okio.ForwardingSource;
 import okio.Okio;
 import okio.Source;
-
-public class OkHttpProgressGlideModule implements GlideModule {
+@GlideModule
+public class OkHttpProgressGlideModule extends AppGlideModule {
 
 	public static DiskCache cache;
 
@@ -41,7 +47,10 @@ public class OkHttpProgressGlideModule implements GlideModule {
 	public static void expect(String url, UIProgressListener listener) {
 		DispatchingProgressListener.expect(url, listener);
 	}
-
+    @Override
+    public boolean isManifestParsingEnabled() {
+        return false;
+    }
 	@Override public void applyOptions(Context context, GlideBuilder builder) {
 		builder.setDecodeFormat(DecodeFormat.PREFER_ARGB_8888);
 		// 设置缓存目录
@@ -57,14 +66,24 @@ public class OkHttpProgressGlideModule implements GlideModule {
 		});
 	}
 
-	@Override public void registerComponents(Context context, Glide glide) {
+	@Override
+	public void registerComponents(@NonNull Context context, @NonNull Glide glide, @NonNull Registry registry) {
 		OkHttpClient.Builder builder = new OkHttpClient.Builder();
 		builder.networkInterceptors().add(createInterceptor(new DispatchingProgressListener()));
 		builder.connectTimeout(30, TimeUnit.SECONDS);
 		builder.writeTimeout(30, TimeUnit.SECONDS);
 		builder.readTimeout(30, TimeUnit.SECONDS);
-		glide.register(GlideUrl.class, InputStream.class, new OkHttpUrlLoader.Factory(builder.build()));
+		registry.replace(GlideUrl.class, InputStream.class, new OkHttpUrlLoader.Factory());
 	}
+
+	//	@Override public void registerComponents(Context context, Glide glide) {
+//		OkHttpClient.Builder builder = new OkHttpClient.Builder();
+//		builder.networkInterceptors().add(createInterceptor(new DispatchingProgressListener()));
+//		builder.connectTimeout(30, TimeUnit.SECONDS);
+//		builder.writeTimeout(30, TimeUnit.SECONDS);
+//		builder.readTimeout(30, TimeUnit.SECONDS);
+//		glide.register(GlideUrl.class, InputStream.class, new OkHttpUrlLoader.Factory(builder.build()));
+//	}
 
 	private static Interceptor createInterceptor(final ResponseProgressListener listener) {
 		return new Interceptor() {

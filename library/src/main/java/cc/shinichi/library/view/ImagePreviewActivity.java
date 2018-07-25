@@ -8,6 +8,7 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.ViewPager;
@@ -16,6 +17,15 @@ import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
+
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.target.SizeReadyCallback;
+import com.bumptech.glide.request.target.Target;
+import com.bumptech.glide.request.transition.Transition;
+
+import java.io.File;
+import java.util.List;
+
 import cc.shinichi.library.ImagePreview;
 import cc.shinichi.library.R;
 import cc.shinichi.library.bean.ImageInfo;
@@ -25,12 +35,6 @@ import cc.shinichi.library.tool.DownloadPictureUtil;
 import cc.shinichi.library.tool.HandlerUtils;
 import cc.shinichi.library.tool.Print;
 import cc.shinichi.library.tool.ToastUtil;
-import com.bumptech.glide.Glide;
-import com.bumptech.glide.request.animation.GlideAnimation;
-import com.bumptech.glide.request.target.SizeReadyCallback;
-import com.bumptech.glide.request.target.Target;
-import java.io.File;
-import java.util.List;
 
 import static android.support.v4.content.PermissionChecker.PERMISSION_GRANTED;
 
@@ -138,10 +142,10 @@ public class ImagePreviewActivity extends AppCompatActivity implements Handler.C
 			Print.d(TAG, "handler == 0 path = " + path);
 			visible();
 			tv_show_origin.setText("0 %");
-
-			Glide.with(this).load(path).downloadOnly(new ProgressTarget<String, File>(path, null) {
-				@Override public void onProgress(String url, long bytesRead, long expectedLength) {
-					int progress = (int) ((float) bytesRead * 100 / (float) expectedLength);
+			Glide.with(this).load(path).downloadOnly(new ProgressTarget<String,File>(path,null) {
+				@Override
+				public void onProgress(String url, long bytesRead, long expectedLength) {
+										int progress = (int) ((float) bytesRead * 100 / (float) expectedLength);
 					Print.d(TAG, "OnProgress--->" + progress);
 
 					if (bytesRead == expectedLength) {// 加载完成
@@ -162,8 +166,9 @@ public class ImagePreviewActivity extends AppCompatActivity implements Handler.C
 					}
 				}
 
-				@Override public void onResourceReady(File resource, GlideAnimation<? super File> animation) {
-					super.onResourceReady(resource, animation);
+				@Override
+				public void onResourceReady(@NonNull File resource, @Nullable Transition<? super File> transition) {
+					super.onResourceReady(resource, transition);
 					Message message = handlerHolder.obtainMessage();
 					Bundle bundle = new Bundle();
 					bundle.putString("url", path);
@@ -172,10 +177,49 @@ public class ImagePreviewActivity extends AppCompatActivity implements Handler.C
 					handlerHolder.sendMessage(message);
 				}
 
-				@Override public void getSize(SizeReadyCallback cb) {
+				@Override
+				public void getSize(SizeReadyCallback cb) {
+//					super.getSize(cb);
 					cb.onSizeReady(Target.SIZE_ORIGINAL, Target.SIZE_ORIGINAL);
 				}
 			});
+//			Glide.with(this).load(path).downloadOnly(new ProgressTarget<String, File>(path, null) {
+//				@Override public void onProgress(String url, long bytesRead, long expectedLength) {
+//					int progress = (int) ((float) bytesRead * 100 / (float) expectedLength);
+//					Print.d(TAG, "OnProgress--->" + progress);
+//
+//					if (bytesRead == expectedLength) {// 加载完成
+//						Message message = handlerHolder.obtainMessage();
+//						Bundle bundle = new Bundle();
+//						bundle.putString("url", url);
+//						message.what = 1;
+//						message.obj = bundle;
+//						handlerHolder.sendMessage(message);
+//					} else {// 加载中
+//						Message message = handlerHolder.obtainMessage();
+//						Bundle bundle = new Bundle();
+//						bundle.putString("url", url);
+//						bundle.putInt("progress", progress);
+//						message.what = 2;
+//						message.obj = bundle;
+//						handlerHolder.sendMessage(message);
+//					}
+//				}
+//
+//				@Override public void onResourceReady(File resource, GlideAnimation<? super File> animation) {
+//					super.onResourceReady(resource, animation);
+//					Message message = handlerHolder.obtainMessage();
+//					Bundle bundle = new Bundle();
+//					bundle.putString("url", path);
+//					message.what = 1;
+//					message.obj = bundle;
+//					handlerHolder.sendMessage(message);
+//				}
+//
+//				@Override public void getSize(SizeReadyCallback cb) {
+//					cb.onSizeReady(Target.SIZE_ORIGINAL, Target.SIZE_ORIGINAL);
+//				}
+//			});
 		} else if (msg.what == 1) {// 加载完成
 			Print.d(TAG, "handler == 1");
 			Bundle bundle = (Bundle) msg.obj;
